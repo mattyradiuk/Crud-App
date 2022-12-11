@@ -1,0 +1,57 @@
+// The data model class representing a blog post
+public class Post {
+  private long id;
+  private String title;
+  private String body;
+  // Getters and setters omitted for brevity
+}
+
+// The repository interface for accessing blog posts
+public interface PostRepository extends CrudRepository<Post, Long> {}
+
+// The controller class defining the API endpoints
+@RestController
+public class BlogController {
+  private final PostRepository repository;
+
+  public BlogController(PostRepository repository) {
+    this.repository = repository;
+  }
+
+  // API endpoint for retrieving all posts
+  @GetMapping("/posts")
+  public List<Post> getAllPosts() {
+    return repository.findAll();
+  }
+
+  // API endpoint for creating a new post
+  @PostMapping("/posts")
+  public Post createPost(@RequestBody Post post) {
+    return repository.save(post);
+  }
+
+  // API endpoint for retrieving a specific post
+  @GetMapping("/posts/{id}")
+  public Post getPost(@PathVariable long id) {
+    return repository.findById(id)
+      .orElseThrow(() -> new PostNotFoundException(id));
+  }
+
+  // API endpoint for updating a post
+  @PutMapping("/posts/{id}")
+  public Post updatePost(@RequestBody Post post, @PathVariable long id) {
+    return repository.findById(id)
+      .map(p -> {
+        p.setTitle(post.getTitle());
+        p.setBody(post.getBody());
+        return repository.save(p);
+      })
+      .orElseThrow(() -> new PostNotFoundException(id));
+  }
+
+  // API endpoint for deleting a post
+  @DeleteMapping("/posts/{id}")
+  public void deletePost(@PathVariable long id) {
+    repository.deleteById(id);
+  }
+}
